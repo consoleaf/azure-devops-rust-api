@@ -13,51 +13,51 @@ mod utils;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Initialize logging
-    env_logger::init();
+  // Initialize logging
+  env_logger::init();
 
-    // Get authentication credential
-    let credential = utils::get_credential();
+  // Get authentication credential
+  let credential = utils::get_credential();
 
-    // Get ADO server configuration via environment variables
-    let organization = env::var("ADO_ORGANIZATION").expect("Must define ADO_ORGANIZATION");
-    let project = env::var("ADO_PROJECT").expect("Must define ADO_PROJECT");
-    let release_id: i32 = env::args()
-        .nth(1)
-        .expect("Usage: release-logs <release-id> <output-file>")
-        .parse::<i32>()
-        .ok()
-        .expect("Must Provide release ID");
-    let output_file: String = env::args()
-        .nth(2)
-        .expect("Usage: release-logs <release-id> <output-file>");
+  // Get ADO server configuration via environment variables
+  let organization = env::var("ADO_ORGANIZATION").expect("Must define ADO_ORGANIZATION");
+  let project = env::var("ADO_PROJECT").expect("Must define ADO_PROJECT");
+  let release_id: i32 = env::args()
+    .nth(1)
+    .expect("Usage: release-logs <release-id> <output-file>")
+    .parse::<i32>()
+    .ok()
+    .expect("Must Provide release ID");
+  let output_file: String = env::args()
+    .nth(2)
+    .expect("Usage: release-logs <release-id> <output-file>");
 
-    // Create release client
-    let release_client = release::ClientBuilder::new(credential).build();
+  // Create release client
+  let release_client = release::ClientBuilder::new(credential).build();
 
-    // Get release logs
-    println!("\nDownloading release logs for release {}", release_id);
-    let (status, _headers, body) = release_client
-        .releases_client()
-        .get_logs(organization, project, release_id)
-        .send()
-        .await?
-        .into_raw_response()
-        .deconstruct();
+  // Get release logs
+  println!("\nDownloading release logs for release {}", release_id);
+  let (status, _headers, body) = release_client
+    .releases_client()
+    .get_logs(organization, project, release_id)
+    .send()
+    .await?
+    .into_raw_response()
+    .deconstruct();
 
-    if status != azure_core::StatusCode::Ok {
-        println!("Request failed. status:{}", status);
-        return Err(anyhow!("Request failed"));
-    }
+  if status != azure_core::StatusCode::Ok {
+    println!("Request failed. status:{}", status);
+    return Err(anyhow!("Request failed"));
+  }
 
-    // Write the data as a zipfile
-    println!("Writing data to zipfile: {}", output_file);
-    let data = body.collect().await?;
-    let mut file = File::create(&output_file)?;
-    file.write_all(&data)?;
-    println!("Logs saved");
+  // Write the data as a zipfile
+  println!("Writing data to zipfile: {}", output_file);
+  let data = body.collect().await?;
+  let mut file = File::create(&output_file)?;
+  file.write_all(&data)?;
+  println!("Logs saved");
 
-    println!("Use 'unzip {}' to extract the logs", output_file);
+  println!("Use 'unzip {}' to extract the logs", output_file);
 
-    Ok(())
+  Ok(())
 }

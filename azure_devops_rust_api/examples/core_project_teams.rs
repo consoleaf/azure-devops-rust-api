@@ -11,37 +11,37 @@ mod utils;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Initialize logging
-    env_logger::init();
+  // Initialize logging
+  env_logger::init();
 
-    // Get authentication credential
-    let credential = utils::get_credential();
+  // Get authentication credential
+  let credential = utils::get_credential();
 
-    // Get ADO server configuration via environment variables
-    let organization = env::var("ADO_ORGANIZATION").expect("Must define ADO_ORGANIZATION");
-    let project = env::var("ADO_PROJECT").expect("Must define ADO_PROJECT");
+  // Get ADO server configuration via environment variables
+  let organization = env::var("ADO_ORGANIZATION").expect("Must define ADO_ORGANIZATION");
+  let project = env::var("ADO_PROJECT").expect("Must define ADO_PROJECT");
 
-    // Max number of teams to be fetched, default max is 100
-    let top_teams: i32 = 500;
+  // Max number of teams to be fetched, default max is 100
+  let top_teams: i32 = 500;
 
-    // Create core client
-    let core_client = core::ClientBuilder::new(credential).build();
+  // Create core client
+  let core_client = core::ClientBuilder::new(credential).build();
 
-    let project_teams = core_client
-        .teams_client()
-        .get_teams(&organization, &project)
-        .top(top_teams)
-        .await?
-        .value;
+  let project_teams = core_client
+    .teams_client()
+    .get_teams(&organization, &project)
+    .top(top_teams)
+    .await?
+    .value;
 
-    // Display team names
-    println!("\nProject teams:");
-    for team in project_teams.iter() {
-        match &team.web_api_team_ref.name {
-            Some(name) => println!("{}", name),
-            _ => {}
-        }
+  // Display team names
+  println!("\nProject teams:");
+  for team in project_teams.iter() {
+    match &team.web_api_team_ref.name {
+      Some(name) => println!("{}", name),
+      _ => {}
     }
+  }
 
-    Ok(())
+  Ok(())
 }

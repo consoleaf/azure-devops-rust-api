@@ -12,42 +12,42 @@ mod utils;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Initialize logging
-    env_logger::init();
+  // Initialize logging
+  env_logger::init();
 
-    // Get authentication credential
-    let credential = utils::get_credential();
+  // Get authentication credential
+  let credential = utils::get_credential();
 
-    // Get ADO server configuration via environment variables
-    let organization = env::var("ADO_ORGANIZATION").expect("Must define ADO_ORGANIZATION");
+  // Get ADO server configuration via environment variables
+  let organization = env::var("ADO_ORGANIZATION").expect("Must define ADO_ORGANIZATION");
 
-    // Create a extension_management_client
-    let extension_management_client = extension_management::ClientBuilder::new(credential).build();
+  // Create a extension_management_client
+  let extension_management_client = extension_management::ClientBuilder::new(credential).build();
 
-    // Get all the installed extensions
-    let installed_extensions = extension_management_client
-        .installed_extensions_client()
-        .list(organization)
-        .await?
-        .value;
+  // Get all the installed extensions
+  let installed_extensions = extension_management_client
+    .installed_extensions_client()
+    .list(organization)
+    .await?
+    .value;
 
-    println!("Installed extensions:");
-    for extension in installed_extensions.iter() {
-        match extension {
-            InstalledExtension {
-                extension_name: Some(name),
-                publisher_name: Some(publisher),
-                version: Some(version),
-                ..
-            } => {
-                println!("{:65}{:24}{:40}", name, version, publisher);
-            }
-            _ => {}
-        }
+  println!("Installed extensions:");
+  for extension in installed_extensions.iter() {
+    match extension {
+      InstalledExtension {
+        extension_name: Some(name),
+        publisher_name: Some(publisher),
+        version: Some(version),
+        ..
+      } => {
+        println!("{:65}{:24}{:40}", name, version, publisher);
+      }
+      _ => {}
     }
+  }
 
-    if let Some(extension) = installed_extensions.iter().next() {
-        println!("\nExample extension:\n{:#?}", extension);
-    }
-    Ok(())
+  if let Some(extension) = installed_extensions.iter().next() {
+    println!("\nExample extension:\n{:#?}", extension);
+  }
+  Ok(())
 }

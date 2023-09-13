@@ -13,63 +13,57 @@ mod utils;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Initialize logging
-    env_logger::init();
+  // Initialize logging
+  env_logger::init();
 
-    // Get authentication credential
-    let credential = utils::get_credential();
+  // Get authentication credential
+  let credential = utils::get_credential();
 
-    // Get ADO configuration via environment variables
-    let organization = env::var("ADO_ORGANIZATION").expect("Must define ADO_ORGANIZATION");
-    let project = env::var("ADO_PROJECT").expect("Must define ADO_PROJECT");
+  // Get ADO configuration via environment variables
+  let organization = env::var("ADO_ORGANIZATION").expect("Must define ADO_ORGANIZATION");
+  let project = env::var("ADO_PROJECT").expect("Must define ADO_PROJECT");
 
-    // Create an artifacts client
-    println!("Create artifacts client");
-    let artifacts_client = artifacts::ClientBuilder::new(credential).build();
+  // Create an artifacts client
+  println!("Create artifacts client");
+  let artifacts_client = artifacts::ClientBuilder::new(credential).build();
 
-    // Query all the artifact feeds
-    let feeds = artifacts_client
-        .feed_management_client()
-        .get_feeds(&organization, &project)
+  // Query all the artifact feeds
+  let feeds = artifacts_client
+    .feed_management_client()
+    .get_feeds(&organization, &project)
+    .await?
+    .value;
+
+  if let Some(feed) = feeds.iter().next() {
+    if let Some(feed_id) = &feed.feed_core.id {
+      let packages = artifacts_client
+        .artifact_details_client()
+        .get_packages(&organization, feed_id, &project)
         .await?
         .value;
 
-    if let Some(feed) = feeds.iter().next() {
-        if let Some(feed_id) = &feed.feed_core.id {
-            let packages = artifacts_client
-                .artifact_details_client()
-                .get_packages(&organization, feed_id, &project)
-                .await?
-                .value;
+      if let Some(package) = packages.iter().next() {
+        let name = package.name.as_deref().unwrap_or("");
+        let id = package.id.as_deref().unwrap_or("");
+        let version_id = package
+          .versions
+          .first()
+          .expect("No package version information available")
+          .id
+          .as_deref()
+          .unwrap_or("");
+        println!("{:30}{:40}{:40}", name, id, version_id);
 
-            if let Some(package) = packages.iter().next() {
-                let name = package.name.as_deref().unwrap_or("");
-                let id = package.id.as_deref().unwrap_or("");
-                let version_id = package
-                    .versions
-                    .first()
-                    .expect("No package version information available")
-                    .id
-                    .as_deref()
-                    .unwrap_or("");
-                println!("{:30}{:40}{:40}", name, id, version_id);
+        let provenance = artifacts_client
+          .artifact_details_client()
+          .get_package_version_provenance(&organization, feed_id, id, version_id, &project)
+          .await?
+          .provenance;
 
-                let provenance = artifacts_client
-                    .artifact_details_client()
-                    .get_package_version_provenance(
-                        &organization,
-                        feed_id,
-                        id,
-                        version_id,
-                        &project,
-                    )
-                    .await?
-                    .provenance;
-
-                println!("{:#?}", provenance);
-            }
-        }
+        println!("{:#?}", provenance);
+      }
     }
+  }
 
-    Ok(())
+  Ok(())
 }

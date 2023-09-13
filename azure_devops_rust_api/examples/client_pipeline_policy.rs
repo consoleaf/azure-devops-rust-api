@@ -24,55 +24,55 @@ mod utils;
 pub struct RequestLogger {}
 
 impl RequestLogger {
-    fn new() -> Self {
-        Default::default()
-    }
+  fn new() -> Self {
+    Default::default()
+  }
 }
 
 #[async_trait]
 impl azure_core::Policy for RequestLogger {
-    async fn send(
-        &self,
-        ctx: &Context,
-        request: &mut Request,
-        next: &[Arc<dyn Policy>],
-    ) -> PolicyResult {
-        info!("> Request:\n{:#?}", request);
-        let now = time::Instant::now();
-        // Call the next policy in the chain, and await the response
-        let rsp = next[0].send(ctx, request, &next[1..]).await;
-        let elapsed_time = now.elapsed();
-        info!("Request took {} secs", elapsed_time.as_seconds_f32());
-        info!("< Response:\n{:#?}", rsp);
-        rsp
-    }
+  async fn send(
+    &self,
+    ctx: &Context,
+    request: &mut Request,
+    next: &[Arc<dyn Policy>],
+  ) -> PolicyResult {
+    info!("> Request:\n{:#?}", request);
+    let now = time::Instant::now();
+    // Call the next policy in the chain, and await the response
+    let rsp = next[0].send(ctx, request, &next[1..]).await;
+    let elapsed_time = now.elapsed();
+    info!("Request took {} secs", elapsed_time.as_seconds_f32());
+    info!("< Response:\n{:#?}", rsp);
+    rsp
+  }
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Initialize logging - set default log level to info
-    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
+  // Initialize logging - set default log level to info
+  env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
 
-    // Get authentication credential
-    let credential = utils::get_credential();
+  // Get authentication credential
+  let credential = utils::get_credential();
 
-    // Get ADO configuration via environment variables
-    let organization = env::var("ADO_ORGANIZATION").expect("Must define ADO_ORGANIZATION");
-    let project = env::var("ADO_PROJECT").expect("Must define ADO_PROJECT");
+  // Get ADO configuration via environment variables
+  let organization = env::var("ADO_ORGANIZATION").expect("Must define ADO_ORGANIZATION");
+  let project = env::var("ADO_PROJECT").expect("Must define ADO_PROJECT");
 
-    let request_logger_policy = Arc::new(RequestLogger::new()) as Arc<dyn Policy>;
+  let request_logger_policy = Arc::new(RequestLogger::new()) as Arc<dyn Policy>;
 
-    // Create a git client with our custom policy
-    let git_client = git::ClientBuilder::new(credential)
-        .per_call_policies(vec![request_logger_policy])
-        .build();
+  // Create a git client with our custom policy
+  let git_client = git::ClientBuilder::new(credential)
+    .per_call_policies(vec![request_logger_policy])
+    .build();
 
-    // Get all repositories in the specified organization/project
-    let _repos = git_client
-        .repositories_client()
-        .list(organization, project)
-        .await?
-        .value;
+  // Get all repositories in the specified organization/project
+  let _repos = git_client
+    .repositories_client()
+    .list(organization, project)
+    .await?
+    .value;
 
-    Ok(())
+  Ok(())
 }

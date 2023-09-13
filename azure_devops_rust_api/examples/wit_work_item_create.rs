@@ -13,39 +13,39 @@ mod utils;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Initialize logging
-    env_logger::init();
+  // Initialize logging
+  env_logger::init();
 
-    // Get authentication credential
-    let credential = utils::get_credential();
+  // Get authentication credential
+  let credential = utils::get_credential();
 
-    // Get ADO configuration via environment variables
-    let organization = env::var("ADO_ORGANIZATION").expect("Must define ADO_ORGANIZATION");
-    let project = env::var("ADO_PROJECT").expect("Must define ADO_PROJECT");
+  // Get ADO configuration via environment variables
+  let organization = env::var("ADO_ORGANIZATION").expect("Must define ADO_ORGANIZATION");
+  let project = env::var("ADO_PROJECT").expect("Must define ADO_PROJECT");
 
-    // Create a wit client
-    let wit_client = wit::ClientBuilder::new(credential).build();
-    // Assign the type of work item to create
-    let work_item_type = "User Story";
-    // Define the title of the work item to be created
-    let title = JsonPatchOperation {
-        from: None,
-        op: Some(Op::Add),
-        path: Some("/fields/System.Title".to_owned()),
-        value: Some(json!("Example User Story title")),
-    };
-    // Each operation lives in a vector, additional elements can be added to fill in other fields
-    // of a work item, see the comments at the end of this file for some examples
-    let body = vec![title];
-    // Create a work item
-    let work_item = wit_client
-        .work_items_client()
-        .create(organization, body, project, work_item_type)
-        .await?;
+  // Create a wit client
+  let wit_client = wit::ClientBuilder::new(credential).build();
+  // Assign the type of work item to create
+  let work_item_type = "User Story";
+  // Define the title of the work item to be created
+  let title = JsonPatchOperation {
+    from: None,
+    op: Some(Op::Add),
+    path: Some("/fields/System.Title".to_owned()),
+    value: Some(json!("Example User Story title")),
+  };
+  // Each operation lives in a vector, additional elements can be added to fill in other fields
+  // of a work item, see the comments at the end of this file for some examples
+  let body = vec![title];
+  // Create a work item
+  let work_item = wit_client
+    .work_items_client()
+    .create(organization, body, project, work_item_type)
+    .await?;
 
-    println!("{:#?}", work_item);
+  println!("{:#?}", work_item);
 
-    Ok(())
+  Ok(())
 }
 
 // When creating a work item you can also assign an iteration

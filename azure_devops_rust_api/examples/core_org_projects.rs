@@ -11,28 +11,28 @@ mod utils;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Initialize logging
-    env_logger::init();
+  // Initialize logging
+  env_logger::init();
 
-    // Get authentication credential
-    let credential = utils::get_credential();
+  // Get authentication credential
+  let credential = utils::get_credential();
 
-    // Get ADO server configuration via environment variables
-    let organization = env::var("ADO_ORGANIZATION").expect("Must define ADO_ORGANIZATION");
+  // Get ADO server configuration via environment variables
+  let organization = env::var("ADO_ORGANIZATION").expect("Must define ADO_ORGANIZATION");
 
-    // Max number of projects to be fetched, default max is 100
-    let top_projects: i32 = 500;
+  // Max number of projects to be fetched, default max is 100
+  let top_projects: i32 = 500;
 
-    // Create core client
-    let core_client = core::ClientBuilder::new(credential).build();
+  // Create core client
+  let core_client = core::ClientBuilder::new(credential).build();
 
-    let org_projects = core_client
-        .projects_client()
-        .list(&organization)
-        .top(top_projects)
-        .await?;
+  let org_projects = core_client
+    .projects_client()
+    .list(&organization)
+    .top(top_projects)
+    .await?;
 
-    println!("{:#?}", org_projects);
+  println!("{:#?}", org_projects);
 
-    Ok(())
+  Ok(())
 }

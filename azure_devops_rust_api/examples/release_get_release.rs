@@ -10,42 +10,42 @@ mod utils;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Initialize logging
-    env_logger::init();
+  // Initialize logging
+  env_logger::init();
 
-    // Get authentication credential
-    let credential = utils::get_credential();
+  // Get authentication credential
+  let credential = utils::get_credential();
 
-    // Get ADO server configuration via environment variables
-    let organization = env::var("ADO_ORGANIZATION").expect("Must define ADO_ORGANIZATION");
-    let project = env::var("ADO_PROJECT").expect("Must define ADO_PROJECT");
+  // Get ADO server configuration via environment variables
+  let organization = env::var("ADO_ORGANIZATION").expect("Must define ADO_ORGANIZATION");
+  let project = env::var("ADO_PROJECT").expect("Must define ADO_PROJECT");
 
-    // Create release client
-    let release_client = release::ClientBuilder::new(credential).build();
+  // Create release client
+  let release_client = release::ClientBuilder::new(credential).build();
 
-    // Get the release ID from user
-    let release_id: i32 = env::args()
-        .nth(1)
-        .expect("Usage: release_get_specific_release <release_id>")
-        .parse()
-        .unwrap();
+  // Get the release ID from user
+  let release_id: i32 = env::args()
+    .nth(1)
+    .expect("Usage: release_get_specific_release <release_id>")
+    .parse()
+    .unwrap();
 
-    // Query a specific release
-    println!("\nRelease:");
-    let release = release_client
-        .releases_client()
-        .get_release(&organization, &project, release_id)
-        .await?;
-    println!("{:#?}", release);
+  // Query a specific release
+  println!("\nRelease:");
+  let release = release_client
+    .releases_client()
+    .get_release(&organization, &project, release_id)
+    .await?;
+  println!("{:#?}", release);
 
-    // Get manual interventions on a release
-    println!("\nManual interventions:");
-    let manual_interventions = release_client
-        .manual_interventions_client()
-        .list(&organization, &project, release_id)
-        .await?
-        .value;
-    println!("{:#?}", manual_interventions);
+  // Get manual interventions on a release
+  println!("\nManual interventions:");
+  let manual_interventions = release_client
+    .manual_interventions_client()
+    .list(&organization, &project, release_id)
+    .await?
+    .value;
+  println!("{:#?}", manual_interventions);
 
-    Ok(())
+  Ok(())
 }
